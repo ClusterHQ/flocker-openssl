@@ -50,15 +50,15 @@ case $i in
     shift # past argument=value
     ;;
     -c=*|--cluster_name=*)
-    $CLUSTER_NAME="${i#*=}"
+    CLUSTER_NAME="${i#*=}"
     shift # past argument=value
     ;;
     -f=*|--openssl_file=*)
-    $OPENSSL_FILE="${i#*=}"
+    OPENSSL_FILE="${i#*=}"
     shift # past argument with no value
     ;;
     -n=*|--nodes=*)
-    $NODES="${i#*=}"
+    NODES="${i#*=}"
     shift # past argument with no value
     ;;
     -h|--help)
@@ -85,11 +85,11 @@ for n in $NODES
 do
 echo "$node_count:$n"
 nodes[$node_count]=$n
-(($node_count++))
+((node_count++))
 done
 
 # cluster name should be unique for each cluster you have
-cluster_name=$(CLUSTER_NAME:="mycluster"}
+cluster_name=${CLUSTER_NAME:="mycluster"}
 
 # this is the path to
 openssl_cnf_path=${OPENSSL_FILE:="./openssl.cnf"}
