@@ -107,3 +107,10 @@ $ cp ssl/node2/node-da0779a7-51b9-4d62-a4a7-e9ca55f73988.key node.key
 ```
 
 Then start the Flocker services. Learn more [here.](https://docs.clusterhq.com/en/latest/)
+
+### Contributions
+
+Thanks to Brendan Cox for the heavy lifting. 
+The rest of this was from guidance through:
+# https://jamielinux.com/docs/openssl-certificate-authority/index.html
+# and combined with the implementation in flocker/flocker/ca/_ca.py
