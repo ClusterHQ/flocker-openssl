@@ -1,0 +1,71 @@
+[ ca ]
+# `man ca`
+default_ca = CA_default
+
+[ CA_default ]
+# Directory and file locations.
+# feel free to change these locations to fit your environment
+# while we don't use them, they're (mostly) required
+dir               = /home/bcox/ssl_test
+certs             = $dir/certs
+crl_dir           = $dir/crl
+new_certs_dir     = $dir/newcerts
+database          = $dir/index.txt
+serial            = $dir/serial
+RANDFILE          = $dir/private/.rand
+unique_subject    = no
+
+# For certificate revocation lists.
+crlnumber         = $dir/crlnumber
+crl               = $dir/crl/ca.crl.pem
+crl_extensions    = crl_ext
+default_crl_days  = 30
+
+# SHA-1 is deprecated, so use SHA-2 instead.
+default_md        = sha256
+name_opt          = ca_default
+cert_opt          = ca_default
+default_days      = 7300
+preserve          = no
+policy            = policy_not_strict
+# lets be lenient so we can recreate certs
+
+[ policy_not_strict ]
+# policy for root CA signing, we're very lax
+countryName             = optional
+stateOrProvinceName     = optional
+organizationName        = optional
+organizationalUnitName  = supplied
+commonName              = supplied
+emailAddress            = optional
+
+[ req ]
+# Options for the `req` tool (`man req`).
+default_bits        = 4096
+distinguished_name  = req_distinguished_name
+string_mask         = utf8only
+
+# SHA-1 is deprecated, so use SHA-2 instead.
+default_md          = sha256
+
+# Extension to add when the -x509 option is used.
+x509_extensions     = v3_ca
+
+[ v3_ca ]
+# Extensions used by flocker's CA
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = CA:true, pathlen:0
+keyUsage = cRLSign, keyCertSign
+
+[ control_service_extension ]
+subjectAltName = $ENV::CERT_HOST_ID
+
+[ client_api_ext ]
+# make it a client cert
+extendedKeyUsage = clientAuth
+
+[ req_distinguished_name ]
+# See <https://en.wikipedia.org/wiki/Certificate_signing_request>.
+organizationalUnitName          = Organizational Unit Name
+commonName                      = Common Name
