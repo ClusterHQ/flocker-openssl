@@ -18,7 +18,9 @@ IFS=","
 # most of this was taken from this tutorial:
 # https://jamielinux.com/docs/openssl-certificate-authority/index.html
 # and combined with the implementation in flocker/flocker/ca/_ca.py
-
+#
+# authors: Brendan Cox "justnoise" , and Ryan Wallner "wallnerryan"
+#
 ################################################################################
 
 HELP_MSG="""
