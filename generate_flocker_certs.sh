@@ -22,20 +22,19 @@ IFS=","
 ################################################################################
 
 HELP_MSG="""
-\n
-# Need one of these options set\n
--i= | --control_ip= (Control Service IP)\n
--d= | --control_dns= (Control Service DNS)\n
-\n
-# Optional\n
--c= | --cluster_name= (Name of your cluster, should be unique Default=mycluster)\n
--f= | --openssl_file= (Location of openssl.cnf. Default: ./openssl.cnf)\n
-\n
-# Required\n
--n= | --nodes= (Comma seperated list of node DNS names or unique names)\n
-\n
-# Other\n
--h | --help (This help message)\n
+# Need one of these options set
+-i= | --control_ip= (Control Service IP)
+-d= | --control_dns= (Control Service DNS)
+
+# Optional
+-c= | --cluster_name= (Name of your cluster, should be unique Default=mycluster)
+-f= | --openssl_file= (Location of openssl.cnf. Default: ./openssl.cnf)
+
+# Required
+-n= | --nodes= (Comma seperated list of node DNS names or unique names)
+
+# Other
+-h | --help (This help message)
 """
 
 for i in "$@"
