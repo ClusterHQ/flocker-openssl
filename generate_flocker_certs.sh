@@ -1,4 +1,5 @@
 #!/bin/bash
+IFS=","
 
 # README:
 # the first time you run this, you'll need to setup your
