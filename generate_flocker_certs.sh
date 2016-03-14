@@ -27,8 +27,8 @@ HELP_MSG="""
 -d= | --control_dns= (Control Service DNS)
 
 # Optional
--c= | --cluster_name= (Name of your cluster, should be unique Default=mycluster)
--f= | --openssl_file= (Location of openssl.cnf. Default: ./openssl.cnf)
+-c= | --cluster_name= (Name of your cluster, should be unique. Default=mycluster)
+-f= | --openssl_file= (Location of openssl.cnf. Default=./openssl.cnf)
 
 # Required
 -n= | --nodes= (Comma seperated list of node DNS names or unique names)

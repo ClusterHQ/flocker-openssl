@@ -15,7 +15,7 @@ https://docs.clusterhq.com/en/latest/flocker-standalone/configuring-authenticati
 
 ### How to use this repository
 
-First, [Install Flocker on your syste,](https://docs.clusterhq.com/en/latest/)
+First, [Install Flocker on your system](https://docs.clusterhq.com/en/latest/)
 
 Second, create needed directories.
 
@@ -34,6 +34,7 @@ Pull and update openssl.cnf
 $ cd $HOME/ssl
 $ git clone https://github.com/wallnerryan/flockeropenssl
 $ vi flockeropenssl/openssl.cnf
+
 # edit `dir =` under `[ CA_default ]`
 ```
 
@@ -87,3 +88,22 @@ api_user.crt  cluster.key                                           csr         
 api_user.key  control-ec2-52-91-11-106.compute-1.amazonaws.com.crt  ec2-52-91-11-106.compute-1.amazonaws.com  index.txt.attr      newcerts       serial
 cluster.crt   control-ec2-52-91-11-106.compute-1.amazonaws.com.key  flockeropenssl                            index.txt.attr.old  node2          serial.old
 ```
+
+How to use the certificates?
+```
+# Copy control, cluster and API certs
+$ cp *.crt *.key /etc/flocker/
+$ cd /etc/flocker/
+
+# Rename them appropriately 
+$ mv api_user.crt plugin.crt
+$ mv api_user.key plugin.key
+$ mv control-ec2-52-91-11-106.compute-1.amazonaws.com.crt control-service.crt
+$ mv control-ec2-52-91-11-106.compute-1.amazonaws.com.key control-service.key
+
+# On the dataset node, copy the appropriate node certs (you may need to scp these to appropriate locations)
+$ cp ssl/node2/node-da0779a7-51b9-4d62-a4a7-e9ca55f73988.crt node.crt
+$ cp ssl/node2/node-da0779a7-51b9-4d62-a4a7-e9ca55f73988.key node.key
+```
+
+Then start the Flocker services. Learn more [here.](https://docs.clusterhq.com/en/latest/)
