@@ -79,7 +79,7 @@ control_service_ip=${CONTROL_IP:=""}
 # pass as a list of nodes
 # --nodes=node1,node2,node3...
 [ -z "$NODES" ] && echo "Must provide nodes" && exit 1;
-[ $NODES == "" ] && echo "Must provide at least one node" && exit 1;
+[ -z "${NODES// }" ]  && echo "Must provide at least one node" && exit 1;
 node_count=0
 for n in $NODES
 do
