@@ -19,23 +19,79 @@
 # and combined with the implementation in flocker/flocker/ca/_ca.py
 
 ################################################################################
-# Config: The user must fill in these variables based on their cluster setup:
-#
-# fill in one of the following variables with the ip/dns of the
-# cluster's control-service
-# TODO: these should be command line args
-control_service_dns="ec2-52-36-190-217.us-west-2.compute.amazonaws.com"
-control_service_ip=""
+
+HELP_MSG="""
+\n
+# Need one of these options set\n
+-i= | --control_ip= (Control Service IP)\n
+-d= | --control_dns= (Control Service DNS)\n
+\n
+# Optional\n
+-c= | --cluster_name= (Name of your cluster, should be unique Default=mycluster)\n
+-f= | --openssl_file= (Location of openssl.cnf. Default: ./openssl.cnf)\n
+\n
+# Required\n
+-n= | --nodes= (Comma seperated list of node DNS names or unique names)\n
+\n
+# Other\n
+-h | --help (This help message)\n
+"""
+
+for i in "$@"
+do
+case $i in
+    -i=*|--control_ip=*)
+    CONTROL_IP="${i#*=}"
+    shift # past argument=value
+    ;;
+    -d=*|--control_dns=*)
+    CONTROL_DNS="${i#*=}"
+    shift # past argument=value
+    ;;
+    -c=*|--cluster_name=*)
+    $CLUSTER_NAME="${i#*=}"
+    shift # past argument=value
+    ;;
+    -f=*|--openssl_file=*)
+    $OPENSSL_FILE="${i#*=}"
+    shift # past argument with no value
+    ;;
+    -n=*|--nodes=*)
+    $NODES="${i#*=}"
+    shift # past argument with no value
+    ;;
+    -h|--help)
+    echo -e $HELP_MSG && exit 0;
+    shift # past argument with no value
+    ;;
+    *)
+            # unknown option
+    ;;
+esac
+done
+# Config: The user must pass variables based on their cluster setup:
+# or receive defaults
+control_service_dns=${CONTROL_DNS:=""}
+control_service_ip=${CONTROL_IP:=""}
 
 # fill in the nodes to generate certs for the nodes
-nodes[0]=ec2-52-37-214-228.us-west-2.compute.amazonaws.com
-nodes[1]=ec2-52-37-216-48.us-west-2.compute.amazonaws.com
+# pass as a list of nodes
+# --nodes=node1,node2,node3...
+[ -z "$NODES" ] && echo "Must provide nodes" && exit 1;
+[ $NODES == "" ] && echo "Must provide at least one node" && exit 1;
+node_count=0
+for n in $NODES
+do
+echo "$node_count:$n"
+nodes[$node_count]=$n
+(($node_count++))
+done
 
 # cluster name should be unique for each cluster you have
-cluster_name=mycluster
+cluster_name=$(CLUSTER_NAME:="mycluster"}
 
 # this is the path to
-openssl_cnf_path=./openssl.cnf
+openssl_cnf_path=${OPENSSL_FILE:="./openssl.cnf"}
 
 ################################################################################
 # set the CERT_HOST_ID environment variable early on since its used in
@@ -43,9 +99,11 @@ openssl_cnf_path=./openssl.cnf
 if [ $control_service_dns != "" ]; then
     export CERT_HOST_ID=DNS:control-service,DNS:$control_service_dns
     control_host=$control_service_dns
-else
+elif [ $control_service_ip != "" ]; then
     export CERT_HOST_ID=DNS:control-service,IP:$control_service_ip
     control_host=$control_service_ip
+else
+    echo "Need Control IP or Control DNS" && exit 1;
 fi
 
 # ----------------------------------------

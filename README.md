@@ -15,4 +15,6 @@ https://docs.clusterhq.com/en/latest/flocker-standalone/configuring-authenticati
 
 ### How to use this repository
 
-TBD
+First, [Install Flocker on your syste,](https://docs.clusterhq.com/en/latest/)
+
+Second, create `/etc/flocker/` on each node and run `chmod 700 /etc/flocker`.
