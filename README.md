@@ -19,6 +19,8 @@ First, [Install Flocker on your system](https://docs.clusterhq.com/en/latest/)
 
 Second, create needed directories.
 
+>Note: this is only an example, you can great a different `ssl` directory to fit your needs.
+
 ```
 $ mkdir $HOME/ssl
 $ cd $HOME/ssl
