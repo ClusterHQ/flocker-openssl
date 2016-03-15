@@ -3,7 +3,7 @@ IFS=","
 
 # README:
 # the first time you run this, you'll need to setup your
-# certificate store (feel free to create these directories
+# certificate store (feel free to create these example directories
 # whereever you feel is appropriate):
 #
 # mkdir $HOME/ssl
@@ -78,13 +78,14 @@ control_service_ip=${CONTROL_IP:=""}
 
 # fill in the nodes to generate certs for the nodes
 # pass as a list of nodes
-# --nodes=node1,node2,node3...
+# Example:  --nodes=node1,node2,node3...
+# maybe we want the ability to passa json/yaml/csv to this?
 [ -z "$NODES" ] && echo "Must provide nodes" && exit 1;
 [ -z "${NODES// }" ]  && echo "Must provide at least one node" && exit 1;
 node_count=0
 for n in $NODES
 do
-echo "$node_count:$n"
+#echo "$node_count:$n"
 nodes[$node_count]=$n
 ((node_count++))
 done
@@ -97,7 +98,7 @@ openssl_cnf_path=${OPENSSL_FILE:="./openssl.cnf"}
 
 ################################################################################
 # set the CERT_HOST_ID environment variable early on since its used in
-# openssl.cnf
+# openssl.cnf. Use DNS first if its there.
 if [ $control_service_dns != "" ]; then
     export CERT_HOST_ID=DNS:control-service,DNS:$control_service_dns
     control_host=$control_service_dns
