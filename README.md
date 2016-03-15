@@ -40,7 +40,10 @@ $ vi flockeropenssl/openssl.cnf
 
 > Note:  You can edit `dir = ` under `[ CA_default ]` to either `$HOME/ssl` from the above example or a custom location you are using for your root ssl directory.
 
-Generate Flocker Certificates
+Generate Flocker Certificates, first cd into your `dir` you configured.
+```
+cd $HOME/ssl
+```
 
 You can view help message by
 ```
