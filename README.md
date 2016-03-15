@@ -35,8 +35,10 @@ $ cd $HOME/ssl
 $ git clone https://github.com/wallnerryan/flockeropenssl
 $ vi flockeropenssl/openssl.cnf
 
-# edit `dir =` under `[ CA_default ]`
+# edit `dir =` under `[ CA_default ]` 
 ```
+
+> Note:  You can edit `dir = ` under `[ CA_default ]` to either `$HOME/ssl` from the above example or a custom location you are using for your root ssl directory.
 
 Generate Flocker Certificates
 
