@@ -112,6 +112,93 @@ $ cp ssl/node2/node-da0779a7-51b9-4d62-a4a7-e9ca55f73988.key node.key
 
 Then start the Flocker services. Learn more [here.](https://docs.clusterhq.com/en/latest/)
 
+### FAQ
+
+##### How do I create a single node certificate after i've run the original script to produce others?
+
+Well, this is not supported from the script yet, but because we're usign openssl directly,
+its easy to pick apart the information and create what you need. 
+
+> This portion of the README is also to see how we can use openssl tools to get information
+> from the certificates already created and how to use them.
+
+First, get the Cluster UUID from the `cluster.crt`. You should see `OU=<UUID>` in the output from the command below, copy this UUID.
+```
+openssl x509 -in cluster.crt -text -noout
+```
+
+Then there are two options.
+
+If you used Control DNS originally, put the below bash script in a file called `create-node.sh` next to the oringal script.
+```bash
+#!/bin/bash
+
+# your new node certificate to create
+node_hostname="node.local.example"
+
+cluster_uuid="<UUID from above>" 
+cluster_name="<your cluster name>" # whatever you used originally
+openssl_cnf_path="<path to openssl.cnf>"
+control_service_dns=<DNS name of control service> # whatever you used originally
+
+export CERT_HOST_ID=DNS:control-service,DNS:$control_service_dns
+control_host=$control_service_dns
+cluster_crt_path=cluster.crt
+cluster_key_path=cluster.key
+mkdir $node_hostname
+node_uuid=$(uuidgen)
+node_key_path=$node_hostname/node-$node_uuid.key
+node_csr_path=csr/node-$node_uuid.csr
+node_crt_path=$node_hostname/node-$node_uuid.crt
+# key
+openssl genrsa -out $node_key_path 4096
+# cert request
+subject="/CN=node-$node_uuid/OU=$cluster_uuid"
+openssl req -config $openssl_cnf_path -key $node_key_path -new -sha256 -subj "$subject" -out $node_csr_path
+# cert
+openssl ca -batch -config $openssl_cnf_path -keyfile $cluster_key_path -cert $cluster_crt_path -days 7300 -notext -md sha256 -in $node_csr_path -subj "$subject" -out $node_crt_path
+```
+
+If you used Control IP originally, put the below bash script in a file called `create-node.sh` next to the oringal script.
+```bash
+#!/bin/bash
+
+# your new node certificate to create
+node_hostname="node.local.example"
+
+cluster_uuid="<UUID from above>" 
+cluster_name="<your cluster name>" # whatever you used originally
+openssl_cnf_path="<path to openssl.cnf>"
+control_service_ip=<Your control service IP> # whatever you used originally
+
+export CERT_HOST_ID=DNS:control-service,IP:$control_service_ip
+control_host=$control_service_ip
+cluster_crt_path=cluster.crt
+cluster_key_path=cluster.key
+mkdir $node_hostname
+node_uuid=$(uuidgen)
+node_key_path=$node_hostname/node-$node_uuid.key
+node_csr_path=csr/node-$node_uuid.csr
+node_crt_path=$node_hostname/node-$node_uuid.crt
+# key
+openssl genrsa -out $node_key_path 4096
+# cert request
+subject="/CN=node-$node_uuid/OU=$cluster_uuid"
+openssl req -config $openssl_cnf_path -key $node_key_path -new -sha256 -subj "$subject" -out $node_csr_path
+# cert
+openssl ca -batch -config $openssl_cnf_path -keyfile $cluster_key_path -cert $cluster_crt_path -days 7300 -notext -md sha256 -in $node_csr_path -subj "$subject" -out $node_crt_path
+```
+
+Then, just run the script
+```bash
+chmod +x create-node.sh
+./create-node.sh
+
+# or
+sh create-node.sh
+
+```
+
 ### Contributions
 
 Thanks to Brendan Cox for the heavy lifting. The rest of this was from guidance through:
