@@ -129,7 +129,7 @@ openssl x509 -in cluster.crt -text -noout
 
 Then there are two options.
 
-If you used Control DNS originally, put the below bash script in a file called `create-node.sh` next to the oringal script.
+If you used Control DNS originally, put the below bash script in a file called `create-node.sh` next to the original script.
 ```bash
 #!/bin/bash
 
@@ -159,7 +159,7 @@ openssl req -config $openssl_cnf_path -key $node_key_path -new -sha256 -subj "$s
 openssl ca -batch -config $openssl_cnf_path -keyfile $cluster_key_path -cert $cluster_crt_path -days 7300 -notext -md sha256 -in $node_csr_path -subj "$subject" -out $node_crt_path
 ```
 
-If you used Control IP originally, put the below bash script in a file called `create-node.sh` next to the oringal script.
+If you used Control IP originally, put the below bash script in a file called `create-node.sh` next to the original script.
 ```bash
 #!/bin/bash
 
