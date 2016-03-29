@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/bash -e
+
 IFS=","
 
 # README:
@@ -24,9 +25,11 @@ IFS=","
 ################################################################################
 
 HELP_MSG="""
-# Need one of these options set
+Usage: $0 (-i=<control_ip> | -d=<control_fqdn>) [-f=openssl_conf] -c=<cluster_name> -n=<node>[,<node> ... ]
+
+
 -i= | --control_ip= (Control Service IP)
--d= | --control_dns= (Control Service DNS)
+-d= | --control_fqdn= (Control Service FQDN)
 
 # Optional
 -c= | --cluster_name= (Name of your cluster, should be unique. Default=mycluster)
@@ -39,74 +42,78 @@ HELP_MSG="""
 -h | --help (This help message)
 """
 
-for i in "$@"
-do
-case $i in
+for arg in "$@"; do
+  case $arg in
     -i=*|--control_ip=*)
-    CONTROL_IP="${i#*=}"
-    shift # past argument=value
-    ;;
-    -d=*|--control_dns=*)
-    CONTROL_DNS="${i#*=}"
-    shift # past argument=value
-    ;;
+      CONTROL_IP="${arg#*=}"
+      shift # past argument=value
+      ;;
+    -d=*|--control_fqdn=*)
+      CONTROL_FQDN="${arg#*=}"
+      shift # past argument=value
+      ;;
     -c=*|--cluster_name=*)
-    CLUSTER_NAME="${i#*=}"
-    shift # past argument=value
-    ;;
+      CLUSTER_NAME="${arg#*=}"
+      shift # past argument=value
+      ;;
     -f=*|--openssl_file=*)
-    OPENSSL_FILE="${i#*=}"
-    shift # past argument with no value
-    ;;
+      OPENSSL_FILE="${arg#*=}"
+      shift # past argument with no value
+      ;;
     -n=*|--nodes=*)
-    NODES="${i#*=}"
-    shift # past argument with no value
-    ;;
+      NODES="${arg#*=}"
+      shift # past argument with no value
+      ;;
     -h|--help)
-    echo -e $HELP_MSG && exit 0;
-    shift # past argument with no value
-    ;;
+      echo -e $HELP_MSG && exit 0;
+      shift # past argument with no value
+      ;;
     *)
-            # unknown option
-    ;;
-esac
+      # unknown option
+      ;;
+  esac
 done
 # Config: The user must pass variables based on their cluster setup:
 # or receive defaults
-control_service_dns=${CONTROL_DNS:=""}
+control_service_fqdn=${CONTROL_FQDN:=""}
 control_service_ip=${CONTROL_IP:=""}
 
 # fill in the nodes to generate certs for the nodes
 # pass as a list of nodes
 # Example:  --nodes=node1,node2,node3...
-# maybe we want the ability to passa json/yaml/csv to this?
-[ -z "$NODES" ] && echo "Must provide nodes" && exit 1;
-[ -z "${NODES// }" ]  && echo "Must provide at least one node" && exit 1;
-node_count=0
-for n in $NODES
-do
-#echo "$node_count:$n"
-nodes[$node_count]=$n
-((node_count++))
+# maybe we want the ability to pass a json/yaml/csv to this?
+if [ -z "$NODES" ] || [ -z "${NODES// }" ]; then
+  echo "No nodes provided! Exiting!"
+  echo "${HELP_MSG}"
+  exit 1
+fi
+
+if [ -z "$CLUSTER_NAME" ] || [ -z "${CLUSTER_NAME// }" ]; then
+  echo "No cluster name provided! Exiting!"
+  echo "${HELP_MSG}"
+  exit 1
+fi
+
+declare -a nodes
+for node in $NODES; do
+  nodes+=( $node )
 done
 
-# cluster name should be unique for each cluster you have
-cluster_name=${CLUSTER_NAME:="mycluster"}
-
-# this is the path to
+cluster_name=${CLUSTER_NAME}
 openssl_cnf_path=${OPENSSL_FILE:="./openssl.cnf"}
 
-################################################################################
 # set the CERT_HOST_ID environment variable early on since its used in
-# openssl.cnf. Use DNS first if its there.
-if [ $control_service_dns != "" ]; then
-    export CERT_HOST_ID=DNS:control-service,DNS:$control_service_dns
-    control_host=$control_service_dns
-elif [ $control_service_ip != "" ]; then
-    export CERT_HOST_ID=DNS:control-service,IP:$control_service_ip
-    control_host=$control_service_ip
+# openssl.cnf. Use FQDN first if its there.
+if [ "$control_service_fqdn" != "" ]; then
+  export CERT_HOST_ID=DNS:control-service,DNS:$control_service_fqdn
+  control_host=$control_service_fqdn
+elif [ "$control_service_ip" != "" ]; then
+  export CERT_HOST_ID=DNS:control-service,IP:$control_service_ip
+  control_host=$control_service_ip
 else
-    echo "Need Control IP or Control DNS" && exit 1;
+  echo "No control service FQDN or IP provided! Exiting!"
+  echo "${HELP_MSG}"
+  exit 1
 fi
 
 # ----------------------------------------
