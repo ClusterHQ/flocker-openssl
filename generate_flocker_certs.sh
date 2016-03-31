@@ -27,7 +27,8 @@ Usage: $0 (-i=<control_ip> | -d=<control_fqdn>) [-f=openssl_conf] -c=<cluster_na
 
 # Optional
 -c= | --cluster_name= (Name of your cluster, should be unique. Default=mycluster)
--k= | --key_size= (Size of RSA keys - defaults to 4096)
+-k= | --key_size= (Size of RSA keys. Default=4096)
+-o= | --output-dir= (Location to place the keys. Default=./clusters/<cluster_name>)
 -f= | --openssl_file= (Location of openssl.cnf. Default=./openssl.cnf)
 --force=  (If a cluster has previously been created, force overwrite of the files)
 
@@ -59,6 +60,10 @@ for arg in "$@"; do
       ;;
     -n=*|--nodes=*)
       NODES="${arg#*=}"
+      shift
+      ;;
+    -o=*|--output-dir=*)
+      OUTPUT_DIR="${arg#*=}"
       shift
       ;;
     --force)
@@ -122,15 +127,15 @@ else
 fi
 
 echo "Cleaning up old CA dirs"
-rm -rf $SCRIPT_DIR/ssl
+rm -rf ssl
 
 echo "Create needed CA fs layout"
-mkdir -p $SCRIPT_DIR/ssl/csr
-mkdir -p $SCRIPT_DIR/ssl/newcerts
+mkdir -p ssl/csr
+mkdir -p ssl/newcerts
 
-touch $SCRIPT_DIR/ssl/index.txt
-echo '1000' > $SCRIPT_DIR/ssl/serial
-echo 'unique_subject = no' > $SCRIPT_DIR/ssl/index.txt.attr
+touch ssl/index.txt
+echo '1000' > ssl/serial
+echo 'unique_subject = no' > ssl/index.txt.attr
 
 generate_key(){
   # generate_key <output_path>
@@ -224,7 +229,13 @@ generate_and_sign_cert() {
 
 cluster_uuid=$(uuidgen)
 
-output_dir="$CURRENT_DIR/clusters/$cluster_name"
+# If we want an output path and its relative, we need to root it in our
+# invocation directory and not where we are right now
+if [ ! -z "$OUTPUT_DIR" ] && [ ! "${OUTPUT_DIR:0:1}" = "/" ]; then
+  OUTPUT_DIR="$CURRENT_DIR/$OUTPUT_DIR"
+fi
+
+output_dir=${OUTPUT_DIR:="$CURRENT_DIR/clusters/$cluster_name"}
 echo "Output directory is $output_dir"
 
 if [ -d $output_dir ]; then

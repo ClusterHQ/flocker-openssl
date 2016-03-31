@@ -27,6 +27,7 @@ Usage: $0 (-i=<control_ip> | -d=<control_fqdn>) [-f=openssl_conf] -c=<cluster_na
 # Optional
 -c= | --cluster_name= (Name of your cluster, should be unique. Default=mycluster)
 -k= | --key_size= (Size of RSA keys - defaults to 4096)
+-o= | --output-dir= (Location to place the keys. Default=./clusters/<cluster_name>)
 -f= | --openssl_file= (Location of openssl.cnf. Default=./openssl.cnf)
 --force=  (If a cluster has previously been created, force overwrite of the files)
 
