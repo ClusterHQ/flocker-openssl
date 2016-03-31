@@ -25,6 +25,7 @@ Usage: $0 (-i=<control_ip> | -d=<control_fqdn>) [-f=openssl_conf] -c=<cluster_na
 -c= | --cluster_name= (Name of your cluster, should be unique. Default=mycluster)
 -k= | --key_size= (Size of RSA keys - defaults to 4096)
 -f= | --openssl_file= (Location of openssl.cnf. Default=./openssl.cnf)
+--force=  (If a cluster has previously been created, force overwrite of the files)
 
 # Required
 -n= | --nodes= (Comma seperated list of node DNS names or unique names)
@@ -33,27 +34,32 @@ Usage: $0 (-i=<control_ip> | -d=<control_fqdn>) [-f=openssl_conf] -c=<cluster_na
 -h | --help (This help message)
 """
 
+FORCE_OVERWRITE=false
 for arg in "$@"; do
   case $arg in
     -i=*|--control_ip=*)
       CONTROL_IP="${arg#*=}"
-      shift # past argument=value
+      shift
       ;;
     -d=*|--control_fqdn=*)
       CONTROL_FQDN="${arg#*=}"
-      shift # past argument=value
+      shift
       ;;
     -c=*|--cluster_name=*)
       CLUSTER_NAME="${arg#*=}"
-      shift # past argument=value
+      shift
       ;;
     -f=*|--openssl_file=*)
       OPENSSL_FILE="${arg#*=}"
-      shift # past argument with no value
+      shift
       ;;
     -n=*|--nodes=*)
       NODES="${arg#*=}"
-      shift # past argument with no value
+      shift
+      ;;
+    --force)
+      FORCE_OVERWRITE=true
+      shift
       ;;
     -k=*|--key_size=*)
       KEY_SIZE="${arg#*=}"
@@ -61,7 +67,7 @@ for arg in "$@"; do
       ;;
     -h|--help)
       echo -e $HELP_MSG && exit 0;
-      shift # past argument with no value
+      shift
       ;;
     *)
       # unknown option
@@ -106,7 +112,7 @@ elif [ "$control_service_ip" != "" ]; then
   export CERT_HOST_ID=DNS:control-service,IP:$control_service_ip
   control_host=$control_service_ip
 else
-  echo "No control service FQDN or IP provided! Exiting!"
+  echo "ERROR! No control service FQDN or IP provided! Exiting!"
   echo "${HELP_MSG}"
   exit 1
 fi
@@ -139,7 +145,7 @@ generate_csr() {
 
   # Sanity check
   if [ $# -lt 3 ]; then
-    echo "generate_csr not properly invoked! Exiting!"
+    echo "ERROR! generate_csr not properly invoked! Exiting!"
     exit 1
   fi
 
@@ -159,7 +165,7 @@ sign_csr() {
 
   # Sanity check
   if [ $# -lt 3 ]; then
-    echo "sign_csr not properly invoked! Exiting!"
+    echo "ERROR! sign_csr not properly invoked! Exiting!"
     exit 1
   fi
 
@@ -190,7 +196,7 @@ generate_and_sign_cert() {
 
   # Sanity check
   if [ $# -lt 3 ]; then
-    echo "generate_and_sign_cert not properly invoked! Exiting!"
+    echo "ERROR! generate_and_sign_cert not properly invoked! Exiting!"
     exit 1
   fi
 
@@ -215,6 +221,17 @@ generate_and_sign_cert() {
 cluster_uuid=$(uuidgen)
 
 output_dir="clusters/$cluster_name"
+
+if [ -d $output_dir ]; then
+  if [ "$FORCE_OVERWRITE" == "true" ]; then
+    echo "Forcefuly removing old data from old cluster"
+    rm -rf "$output_dir"
+  else
+    echo "ERROR! Cluster already created and '--force' not specified! Exiting!"
+    exit 1
+  fi
+fi
+
 mkdir -p $output_dir
 
 cluster_keypair_path="$output_dir/cluster"
