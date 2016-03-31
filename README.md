@@ -2,7 +2,7 @@
 
 ### Generating Flocker Certificates OpenSSL
 
-This script will help generate the following certificates for Flocker
+This script will help generate the following certificates for Flocker in `./cluster/<cluster_name>` directory.
 
 * Cluster CA (cluster.crt/.key)
 * Control Cert (control-service.crt/.key)

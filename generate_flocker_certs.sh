@@ -12,7 +12,11 @@
 #
 ################################################################################
 
-CURRENT_DIR="$(dirname $0)"
+# Ensure that we're in the right directory for the config paths to be correct
+# when invoked from other dirs
+SCRIPT_DIR="$(dirname $0)"
+CURRENT_DIR="$(pwd)"
+cd "$SCRIPT_DIR"
 
 HELP_MSG="""
 Usage: $0 (-i=<control_ip> | -d=<control_fqdn>) [-f=openssl_conf] -c=<cluster_name> -n=<node>[,<node> ... ]
@@ -101,7 +105,7 @@ done
 unset IFS
 
 cluster_name=${CLUSTER_NAME}
-openssl_cnf_path=${OPENSSL_FILE:="$CURRENT_DIR/openssl.cnf"}
+openssl_cnf_path=${OPENSSL_FILE:="openssl.cnf"}
 
 # set the CERT_HOST_ID environment variable early on since its used in
 # openssl.cnf. Use FQDN first if its there.
@@ -118,15 +122,15 @@ else
 fi
 
 echo "Cleaning up old CA dirs"
-rm -rf $CURRENT_DIR/ssl
+rm -rf $SCRIPT_DIR/ssl
 
 echo "Create needed CA fs layout"
-mkdir -p $CURRENT_DIR/ssl/csr
-mkdir -p $CURRENT_DIR/ssl/newcerts
+mkdir -p $SCRIPT_DIR/ssl/csr
+mkdir -p $SCRIPT_DIR/ssl/newcerts
 
-touch $(dirname $0)/ssl/index.txt
-echo '1000' > ssl/serial
-echo 'unique_subject = no' > $(dirname $0)/ssl/index.txt.attr
+touch $SCRIPT_DIR/ssl/index.txt
+echo '1000' > $SCRIPT_DIR/ssl/serial
+echo 'unique_subject = no' > $SCRIPT_DIR/ssl/index.txt.attr
 
 generate_key(){
   # generate_key <output_path>
@@ -220,7 +224,8 @@ generate_and_sign_cert() {
 
 cluster_uuid=$(uuidgen)
 
-output_dir="clusters/$cluster_name"
+output_dir="$CURRENT_DIR/clusters/$cluster_name"
+echo "Output directory is $output_dir"
 
 if [ -d $output_dir ]; then
   if [ "$FORCE_OVERWRITE" == "true" ]; then
@@ -236,12 +241,12 @@ mkdir -p $output_dir
 
 cluster_keypair_path="$output_dir/cluster"
 
-echo "Generating the CA keypair"
+echo "Generating the CA keypair (cluster_keypair_path)"
 generate_key "$cluster_keypair_path.key"
 
 echo -n "Self-signing CA cert"
 openssl req -batch \
-            -config $openssl_cnf_path \
+            -config "$openssl_cnf_path" \
             -key "${cluster_keypair_path}.key" \
             -new \
             -x509 \
