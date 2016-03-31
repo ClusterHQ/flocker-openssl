@@ -1,0 +1,5 @@
+clusters/
+*.tmp
+*.crt
+*.key
+ssl/
