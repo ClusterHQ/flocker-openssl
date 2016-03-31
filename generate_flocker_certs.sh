@@ -125,7 +125,10 @@ echo 'unique_subject = no' > $(dirname $0)/ssl/index.txt.attr
 generate_key(){
   # generate_key <output_path>
   local output_path="${1}"
+
+  echo -n "- Generating key $output_path"
   openssl genrsa -out "$output_path" $key_size &>/dev/null
+  echo " [OK]"
 }
 
 generate_csr() {
@@ -134,7 +137,13 @@ generate_csr() {
   local subject="${2}"
   local output_path="${3}"
 
-  echo "Creating csr: $key_path ($subject) -> $output_path"
+  # Sanity check
+  if [ $# -lt 3 ]; then
+    echo "generate_csr not properly invoked! Exiting!"
+    exit 1
+  fi
+
+  echo -n "- Creating csr for $key_path"
   openssl req -config "$openssl_cnf_path" \
               -key "$key_path" \
               -new \
@@ -142,10 +151,18 @@ generate_csr() {
               -sha256 \
               -subj "$subject" \
               -out "$output_path" &>/dev/null
+  echo " ($output_path) [OK]"
 }
 
 sign_csr() {
   # sign_csr <csr_path> <ca_keypair> <output_path> [<extension>]
+
+  # Sanity check
+  if [ $# -lt 3 ]; then
+    echo "sign_csr not properly invoked! Exiting!"
+    exit 1
+  fi
+
   local csr_path="${1}"
   local ca_key="${2}.key"
   local ca_crt="${2}.crt"
@@ -170,6 +187,13 @@ sign_csr() {
 
 generate_and_sign_cert() {
   # generate_and_sign_cert <keypair_path> <subject> <ca_keypair> [<extensions>]
+
+  # Sanity check
+  if [ $# -lt 3 ]; then
+    echo "generate_and_sign_cert not properly invoked! Exiting!"
+    exit 1
+  fi
+
   local key_path="${1}.key"
   local crt_output="${1}.crt"
   local subject="${2}"
@@ -188,15 +212,17 @@ generate_and_sign_cert() {
   rm -f "$temp_csr_path"
 }
 
-echo "Generating the CA keypair"
 cluster_uuid=$(uuidgen)
 
-output_dir="cluster-$cluster_name"
+output_dir="clusters/$cluster_name"
 mkdir -p $output_dir
 
 cluster_keypair_path="$output_dir/cluster"
 
+echo "Generating the CA keypair"
 generate_key "$cluster_keypair_path.key"
+
+echo -n "Self-signing CA cert"
 openssl req -batch \
             -config $openssl_cnf_path \
             -key "${cluster_keypair_path}.key" \
@@ -208,11 +234,15 @@ openssl req -batch \
             -subj "/CN=$cluster_name/OU=$cluster_uuid" \
             -out "${cluster_keypair_path}.crt"
 
+echo " [OK]"
+echo
+
 echo "Generating the control service keypair"
 generate_and_sign_cert "$output_dir/control-service" \
                        "/CN=control-service/OU=$cluster_uuid" \
                        "$cluster_keypair_path" \
                        "control_service_extension"
+echo
 
 echo "Generating node keypair(s)"
 for node_hostname in ${nodes[@]}; do
@@ -220,10 +250,11 @@ for node_hostname in ${nodes[@]}; do
                          "/CN=node-$(uuidgen)/OU=$cluster_uuid" \
                          "$cluster_keypair_path"
 done
+echo
 
 echo "Generating API keypair"
 api_username=api_user
-generate_and_sign_cert "$output_dir/$api_username"
+generate_and_sign_cert "$output_dir/$api_username" \
                        "/CN=user-$api_username/OU=$cluster_uuid" \
                        "$cluster_keypair_path" \
                        "client_api_ext"
