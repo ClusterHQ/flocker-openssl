@@ -270,7 +270,7 @@ done
 echo
 
 echo "Generating API keypair"
-api_username=api_user
+api_username=plugin
 generate_and_sign_cert "$output_dir/$api_username" \
                        "/CN=user-$api_username/OU=$cluster_uuid" \
                        "$cluster_keypair_path" \
