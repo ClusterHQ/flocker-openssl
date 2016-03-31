@@ -111,15 +111,16 @@ else
   exit 1
 fi
 
-# Create needed CA fs layout
-CSR_DIR=$CURRENT_DIR/ssl/csr
-NEW_CERTS_DIR=$CURRENT_DIR/ssl/newcerts
+echo "Cleaning up old CA dirs"
 rm -rf $CURRENT_DIR/ssl
-mkdir -p $CSR_DIR
-mkdir -p $NEW_CERTS_DIR
+
+echo "Create needed CA fs layout"
+mkdir -p $CURRENT_DIR/ssl/csr
+mkdir -p $CURRENT_DIR/ssl/newcerts
+
 touch $(dirname $0)/ssl/index.txt
-echo 'unique_subject = no' > $(dirname $0)/ssl/index.txt.attr
 echo '1000' > ssl/serial
+echo 'unique_subject = no' > $(dirname $0)/ssl/index.txt.attr
 
 generate_key(){
   # generate_key <output_path>
@@ -175,7 +176,7 @@ generate_and_sign_cert() {
   local ca_keypair="${3}"
   local extensions="${4}"
 
-  local temp_csr_path=$(mktemp -q "$(basename $0).XXXXX")
+  local temp_csr_path=$(mktemp -q "$(basename $0).XXXXX.tmp")
 
   generate_key "$key_path"
   generate_csr "$key_path" "$subject" "$temp_csr_path"
@@ -187,47 +188,42 @@ generate_and_sign_cert() {
   rm -f "$temp_csr_path"
 }
 
-
 echo "Generating the CA keypair"
 cluster_uuid=$(uuidgen)
-cluster_keypair_path=cluster
-cluster_key_path="${cluster_keypair_path}.key"
-cluster_crt_path="${cluster_keypair_path}.crt"
 
-generate_key $cluster_key_path
+output_dir="cluster-$cluster_name"
+mkdir -p $output_dir
+
+cluster_keypair_path="$output_dir/cluster"
+
+generate_key "$cluster_keypair_path.key"
 openssl req -batch \
             -config $openssl_cnf_path \
-            -key $cluster_key_path \
+            -key "${cluster_keypair_path}.key" \
             -new \
             -x509 \
             -days 7300 \
             -sha256 \
             -extensions v3_ca \
             -subj "/CN=$cluster_name/OU=$cluster_uuid" \
-            -out $cluster_crt_path
+            -out "${cluster_keypair_path}.crt"
 
 echo "Generating the control service keypair"
-# These end up getting copied to the nodes as control-service.(key|crt)
-control_keypair_path=control-$control_host
-generate_and_sign_cert "$control_keypair_path" \
+generate_and_sign_cert "$output_dir/control-service" \
                        "/CN=control-service/OU=$cluster_uuid" \
                        "$cluster_keypair_path" \
                        "control_service_extension"
 
 echo "Generating node keypair(s)"
 for node_hostname in ${nodes[@]}; do
-    mkdir -p $node_hostname
-
-    node_keypair_path=$node_hostname/node-$node_uuid
-    generate_and_sign_cert "$node_keypair_path" \
-                           "/CN=node-$(uuidgen)/OU=$cluster_uuid" \
-                           "$cluster_keypair_path"
+  generate_and_sign_cert "$output_dir/node-$node_hostname" \
+                         "/CN=node-$(uuidgen)/OU=$cluster_uuid" \
+                         "$cluster_keypair_path"
 done
 
 echo "Generating API keypair"
 api_username=api_user
-api_keypair_path=$api_username
-generate_and_sign_cert "$api_keypair_path" \
+generate_and_sign_cert "$output_dir/$api_username"
                        "/CN=user-$api_username/OU=$cluster_uuid" \
                        "$cluster_keypair_path" \
                        "client_api_ext"
