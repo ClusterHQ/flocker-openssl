@@ -75,7 +75,7 @@ for arg in "$@"; do
       shift
       ;;
     -h|--help)
-      echo -e $HELP_MSG && exit 0;
+      echo "${HELP_MSG}" && exit 0;
       shift
       ;;
     *)
