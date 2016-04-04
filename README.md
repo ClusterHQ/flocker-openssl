@@ -1,5 +1,7 @@
 # OpenSSL with Flocker
 
+> WARNING: This is EXPERIMENTAL support for using openssl tools with Flocker.
+
 ### Generating Flocker Certificates OpenSSL
 
 This script will help generate the following certificates for Flocker
