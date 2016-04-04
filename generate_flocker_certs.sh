@@ -127,15 +127,15 @@ else
 fi
 
 echo "Cleaning up old CA dirs"
-rm -rf ssl
+rm -rf flockerssl
 
 echo "Create needed CA fs layout"
-mkdir -p ssl/csr
-mkdir -p ssl/newcerts
+mkdir -p flockerssl/csr
+mkdir -p flockerssl/newcerts
 
-touch ssl/index.txt
-echo '1000' > ssl/serial
-echo 'unique_subject = no' > ssl/index.txt.attr
+touch flockerssl/index.txt
+echo '1000' > flockerssl/serial
+echo 'unique_subject = no' > flockerssl/index.txt.attr
 
 generate_key(){
   # generate_key <output_path>

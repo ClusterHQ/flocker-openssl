@@ -2,4 +2,4 @@ clusters/
 *.tmp
 *.crt
 *.key
-ssl/
+flockerssl/

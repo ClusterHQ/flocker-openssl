@@ -2,7 +2,7 @@
 default_ca = CA_default
 
 [ CA_default ]
-dir               = ./ssl
+dir               = ./flockerssl
 certs             = $dir/certs
 crl_dir           = $dir/crl
 new_certs_dir     = $dir/newcerts
