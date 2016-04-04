@@ -1,16 +1,8 @@
 #!/bin/bash -e
 #
-################################################################################
-# Most of this was taken from this tutorial:
-# https://jamielinux.com/docs/openssl-certificate-authority/index.html
-# and combined with the implementation in flocker/flocker/ca/_ca.py
+# Script for generating Flocker certificated based on OpenSSL CLI
 #
-# Authors:
-# - Brendan Cox "justnoise"
-# - Ryan Wallner "wallnerryan"
-# - Srdjan Grubor <sgnn7@sgnn7.org>
-#
-################################################################################
+# Authors: See AUTHORS.md
 
 # Ensure that we're in the right directory for the config paths to be correct
 # when invoked from other dirs
