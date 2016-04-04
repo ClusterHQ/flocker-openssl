@@ -41,7 +41,7 @@ Usage: $0 (-i=<control_ip> | -d=<control_fqdn>) [-f=openssl_conf] -c=<cluster_na
 Examples:
 
 ```
-./flockeropenssl/generate_flocker_certs.sh -d=www.foobar.com -k=1024 -c=staging-us-west-2 -n=one,two
+./flockeropenssl/generate_flocker_certs.sh -d=www.foobar.com -k=1024 -c=staging-1 -n=one,two
 ```
 ```
 ./flockeropenssl/generate_flocker_certs.sh -d="ec2-52-91-11-106.compute-1.amazonaws.com" -n="ec2-52-91-11-106.compute-1.amazonaws.com,node2,node3" -f=/etc/flocker/ssl/flockeropenssl/openssl.cnf
