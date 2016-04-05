@@ -19,7 +19,7 @@ https://docs.clusterhq.com/en/latest/flocker-standalone/configuring-authenticati
 
 You can view help message by
 ```
-$ ./flockeropenssl/generate_flocker_certs.sh -h
+$ ./flocker-openssl/generate_flocker_certs.sh -h
 Usage: $0 (-i=<control_ip> | -d=<control_fqdn>) [-f=openssl_conf] -c=<cluster_name> -n=<node>[,<node> ... ]
 
 
