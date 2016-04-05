@@ -1,12 +1,8 @@
 [ ca ]
-# `man ca`
 default_ca = CA_default
 
 [ CA_default ]
-# Directory and file locations.
-# feel free to change these locations to fit your environment
-# while we don't use them, they're (mostly) required
-dir               = <replace me>
+dir               = ./flockerssl
 certs             = $dir/certs
 crl_dir           = $dir/crl
 new_certs_dir     = $dir/newcerts
