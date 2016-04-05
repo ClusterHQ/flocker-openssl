@@ -160,6 +160,4 @@ sh create-node.sh
 
 ### Contributions
 
-Thanks to Brendan Cox for the heavy lifting. The rest of this was from guidance through:
-- https://jamielinux.com/docs/openssl-certificate-authority/index.html
-- and combined with the implementation in flocker/flocker/ca/_ca.py
+See AUTHORS.md
