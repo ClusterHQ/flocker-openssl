@@ -11,7 +11,7 @@ CURRENT_DIR="$(pwd)"
 cd "$SCRIPT_DIR"
 
 HELP_MSG="""
-Usage: $0 (-i=<control_ip> | -d=<control_fqdn>) [-f=openssl_conf] -c=<cluster_name> -n=<node>[,<node> ... ]
+Usage: $0 (-i=<control_ip> | -d=<control_fqdn>) [-f=openssl_conf] [-n=<node>[,<node> ... ]] -c=<cluster_name>
 
 
 -i= | --control_ip= (Control Service IP)
@@ -22,10 +22,8 @@ Usage: $0 (-i=<control_ip> | -d=<control_fqdn>) [-f=openssl_conf] -c=<cluster_na
 -k= | --key_size= (Size of RSA keys. Default=4096)
 -o= | --output-dir= (Location to place the keys. Default=./clusters/<cluster_name>)
 -f= | --openssl_file= (Location of openssl.cnf. Default=./openssl.cnf)
---force=  (If a cluster has previously been created, force overwrite of the files)
-
-# Required
 -n= | --nodes= (Comma seperated list of node DNS names or unique names)
+--force=  (If a cluster has previously been created, force overwrite of the files)
 
 # Other
 -h | --help (This help message)
@@ -81,8 +79,8 @@ control_service_ip=${CONTROL_IP:=""}
 key_size=${KEY_SIZE:="4096"}
 
 # Sanity checks
-if [ -z "$NODES" ] || [ -z "${NODES// }" ]; then
-  echo "No nodes provided! Exiting!"
+if [ ! -z "$NODES" ] && [ -z "${NODES// }" ]; then
+  echo "ERROR! Node list is empty! Exiting!"
   echo "${HELP_MSG}"
   exit 1
 fi
