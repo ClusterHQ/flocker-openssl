@@ -11,13 +11,12 @@ CURRENT_DIR="$(pwd)"
 cd "$SCRIPT_DIR"
 
 HELP_MSG="""
-Usage: $0 (-i=<control_ip> | -d=<control_fqdn>) [-f=openssl_conf] [-n=<node>[,<node> ... ]] -c=<cluster_name>
+Usage: $0 new (-i=<control_ip> | -d=<control_fqdn>) [--force] [-f=openssl_conf] [-n=<node>[,<node> ... ]] -c=<cluster_name>
+       $0 node [-f=openssl_conf] [--force] -c=<cluster_name> -n=<node>[,<node> ... ]
 
-
+# Arguments
 -i= | --control_ip= (Control Service IP)
 -d= | --control_fqdn= (Control Service FQDN)
-
-# Optional
 -c= | --cluster_name= (Name of your cluster, should be unique. Default=mycluster)
 -k= | --key_size= (Size of RSA keys. Default=4096)
 -o= | --output-dir= (Location to place the keys. Default=./clusters/<cluster_name>)
@@ -28,6 +27,17 @@ Usage: $0 (-i=<control_ip> | -d=<control_fqdn>) [-f=openssl_conf] [-n=<node>[,<n
 # Other
 -h | --help (This help message)
 """
+
+# XXX: Doing the assignment after check is to ensure we have >1 args
+OP_TYPE=""
+if [ "${1}" == "node" ] || [ "${1}" == "new" ]; then
+  OP_TYPE="${1}"
+  shift
+else
+  echo "ERROR! Operation type not specified!"
+  echo "${HELP_MSG}"
+  exit 1
+fi
 
 FORCE_OVERWRITE=false
 for arg in "$@"; do
@@ -93,8 +103,8 @@ fi
 
 # Split nodes into discrete values
 IFS=","
-declare -a nodes
-for node in $NODES; do
+nodes=()
+for node in ${NODES}; do
   nodes+=( $node )
 done
 unset IFS
@@ -110,10 +120,15 @@ if [ "$control_service_fqdn" != "" ]; then
 elif [ "$control_service_ip" != "" ]; then
   export CERT_HOST_ID=DNS:control-service,IP:$control_service_ip
   control_host=$control_service_ip
-else
+elif [ ! "${OP_TYPE}" == "node" ]; then
   echo "ERROR! No control service FQDN or IP provided! Exiting!"
   echo "${HELP_MSG}"
   exit 1
+else
+  # XXX: The conf requires this env var even for non-ctrl-service keypair
+  #      generation which is an error but for now we just make sure it's
+  #      not empty
+  export CERT_HOST_ID=""
 fi
 
 echo "Cleaning up old CA dirs"
@@ -217,7 +232,38 @@ generate_and_sign_cert() {
   rm -f "$temp_csr_path"
 }
 
-cluster_uuid=$(uuidgen)
+generate_and_sign_node_certs() {
+  # generate_and_sign_node_certs <ca_keypair> <nodes> <output_dir>
+
+  # Sanity check
+  if [ $# -lt 3 ]; then
+    echo "ERROR! generate_and_sign_node_certs not properly invoked! Exiting!"
+    exit 1
+  fi
+
+  local ca_keypair="${1}"
+  local nodes=("${!2}")     # De-ref the array name
+  local output_dir="${3}"
+
+  echo "- Will create ${#nodes[@]} node keypair(s)"
+
+  local cluster_uuid=$(openssl x509 -noout -subject -in $ca_keypair.crt \
+                       | sed -e 's/.*\/OU=\(.*\)[\/]*.*/\1/')
+  echo "- Using Cluster UUID: $cluster_uuid"
+
+  for node_hostname in ${nodes[@]}; do
+    if [ -e "$output_dir/node-${node_hostname}.key" ] && \
+       [ ! "$FORCE_OVERWRITE" == "true" ]; then
+      echo "Node '$node_hostname' keypair already created. Skipping"
+      continue
+    fi
+
+    generate_and_sign_cert "$output_dir/node-$node_hostname" \
+                           "/CN=node-$(uuidgen)/OU=$cluster_uuid" \
+                           "$ca_keypair"
+  done
+}
+
 
 # If we want an output path and its relative, we need to root it in our
 # invocation directory and not where we are right now
@@ -232,7 +278,7 @@ if [ -d $output_dir ]; then
   if [ "$FORCE_OVERWRITE" == "true" ]; then
     echo "Forcefuly removing old data from old cluster"
     rm -rf "$output_dir"
-  else
+  elif [ "$OP_TYPE" == "new" ]; then
     echo "ERROR! Cluster already created and '--force' not specified! Exiting!"
     exit 1
   fi
@@ -241,6 +287,20 @@ fi
 mkdir -p $output_dir
 
 cluster_keypair_path="$output_dir/cluster"
+
+# Special case of us needing to create/sign node certs
+if [ "${OP_TYPE}" == "node" ]; then
+  echo "Generating and signing node keypair(s)"
+  # XXX: Array passed as a name, not a value
+  generate_and_sign_node_certs $cluster_keypair_path \
+                               "nodes[@]" \
+                               $output_dir
+  echo
+
+  exit
+fi
+
+cluster_uuid=$(uuidgen)
 
 echo "Generating the CA keypair (cluster_keypair_path)"
 generate_key "$cluster_keypair_path.key"
@@ -268,11 +328,10 @@ generate_and_sign_cert "$output_dir/control-service" \
 echo
 
 echo "Generating node keypair(s)"
-for node_hostname in ${nodes[@]}; do
-  generate_and_sign_cert "$output_dir/node-$node_hostname" \
-                         "/CN=node-$(uuidgen)/OU=$cluster_uuid" \
-                         "$cluster_keypair_path"
-done
+# XXX: Array passed as a name, not a value
+generate_and_sign_node_certs $cluster_keypair_path \
+                             "nodes[@]" \
+                             $output_dir
 echo
 
 echo "Generating API keypair"
