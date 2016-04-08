@@ -11,21 +11,28 @@ CURRENT_DIR="$(pwd)"
 cd "$SCRIPT_DIR"
 
 HELP_MSG="""
-Usage: $0 new (-i=<control_ip> | -d=<control_fqdn>) [--force] [-f=openssl_conf] [-n=<node>[,<node> ... ]] -c=<cluster_name>
-       $0 node [-f=openssl_conf] [--force] -c=<cluster_name> -n=<node>[,<node> ... ]
+Usage:
+
+  $0 new (-i=<control_ip> | -d=<control_fqdn>) [--force] [-f=openssl_conf] [-n=<node>[,<node> ... ]] -c=<cluster_name>
+  $0 node [-f=openssl_conf] [--force] -c=<cluster_name> -n=<node>[,<node> ... ]
+
+# Positional arguments
+  new                   Creates new cluster keypair group
+  node                  Creates/signs node keypairs with existing cluster keypair
+                          (Assumes output dir contains cluster.crt and key)
 
 # Arguments
--i= | --control_ip= (Control Service IP)
--d= | --control_fqdn= (Control Service FQDN)
--c= | --cluster_name= (Name of your cluster, should be unique. Default=mycluster)
--k= | --key_size= (Size of RSA keys. Default=4096)
--o= | --output-dir= (Location to place the keys. Default=./clusters/<cluster_name>)
--f= | --openssl_file= (Location of openssl.cnf. Default=./openssl.cnf)
--n= | --nodes= (Comma seperated list of node DNS names or unique names)
---force=  (If a cluster has previously been created, force overwrite of the files)
+  -i=, --control_ip=    Control Service IP
+  -d=, --control_fqdn=  Control Service FQDN
+  -c=, --cluster_name=  Cluster name. Should be unique (Default=mycluster)
+  -k=, --key_size=      RSA keysize (Default=4096)
+  -o=, --output-dir=    Key destination (Default=./clusters/<cluster_name>)
+  -f=, --openssl_file=  OpenSSL conf file location (Default=./openssl.cnf)
+  -n=, --nodes=         Comma seperated list of nodes
+  --force               Force overwrite of files if they already exist
 
 # Other
--h | --help (This help message)
+  -h, --help            This help message
 """
 
 # XXX: Doing the assignment after check is to ensure we have >1 args
