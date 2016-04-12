@@ -6,7 +6,8 @@
 
 # Ensure that we're in the right directory for the config paths to be correct
 # when invoked from other dirs
-SCRIPT_DIR="$(dirname $0)"
+
+SCRIPT_DIR="$(dirname $(readlink -f $0))"
 CURRENT_DIR="$(pwd)"
 cd "$SCRIPT_DIR"
 
