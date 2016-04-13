@@ -285,7 +285,8 @@ echo "Output directory is $output_dir"
 if [ -d $output_dir ]; then
   if [ "$FORCE_OVERWRITE" == "true" ]; then
     echo "Forcefuly removing old data from old cluster"
-    rm -rf "$output_dir"
+    rm -f "${output_dir}/*.crt"
+    rm -f "${output_dir}/*.key"
   elif [ "$OP_TYPE" == "new" ]; then
     echo "ERROR! Cluster already created and '--force' not specified! Exiting!"
     exit 1
